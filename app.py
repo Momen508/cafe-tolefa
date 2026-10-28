@@ -83,8 +83,8 @@ def home():
 #db.init_app(app)
 
 # إنشاء الجدول تلقائياً عند تشغيل التطبيق لأول مرة
-with app.app_context():
-    db.create_all()
+#with app.app_context():
+   # db.create_all()
 
 # ----------------------------------------------------
 # 1. API تسجيل زيارة جديدة عند فتح المنيو
