@@ -16,9 +16,12 @@ TURSO_AUTH_TOKEN = os.getenv("TURSO_AUTH_TOKEN")
 
 # صيغة رابط الاتصال السحابي بـ Turso
 if TURSO_DATABASE_URL and TURSO_AUTH_TOKEN:
-    app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite+{TURSO_DATABASE_URL}?authToken={TURSO_AUTH_TOKEN}"
+    host = TURSO_DATABASE_URL.replace("libsql://", "").replace("https://", "")
+    app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite+libsql://{host}?authToken={TURSO_AUTH_TOKEN}&secure=true"
 else:
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///store.db' # للاختبار المحلي فقط
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///store.db'  # للاختبار المحلي فقط
+
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 
