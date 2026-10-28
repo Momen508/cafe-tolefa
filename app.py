@@ -67,6 +67,11 @@ def cart_page():
 
 @app.route('/')
 def home():
+    with app.app_context():
+          try:
+             db.create_all()
+          except Exception as e:
+            print("Tables check/creation info:", e)
     new_visit = Visit()
     db.session.add(new_visit)
     db.session.commit()
