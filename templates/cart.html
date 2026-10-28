@@ -240,7 +240,7 @@
                 container.innerHTML += `
                     <div class="cart-card">
                         <div class="d-flex align-items-center gap-3">
-                            <img src="${item.image || '/static/default.jpg'}" class="product-img" alt="${item.name}">
+                            <img src="/static/${item.image_url || 'logo2.jpeg'}" class="product-img" alt="${item.name}">
                             <div class="flex-grow-1">
                                 <h6 class="fw-bold mb-1 fs-6">${item.name}</h6>
                                 <div class="text-muted small">${item.category || 'مشروبات'}</div>

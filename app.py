@@ -1,11 +1,27 @@
+import os
 from flask import Flask, request, jsonify
 from models import Category, db, Product, Visit, Order
 from flask import session, redirect, url_for, render_template, request
 from functools import wraps
 from datetime import datetime
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__) 
 app.secret_key = 'my_super_secret_key_coffee_shop' # يقدر يتبدل بأي نص سري
+
+# قراءة البيانات السرية للاتصال بـ Turso
+TURSO_DATABASE_URL = os.getenv("TURSO_DATABASE_URL")
+TURSO_AUTH_TOKEN = os.getenv("TURSO_AUTH_TOKEN")
+
+# صيغة رابط الاتصال السحابي بـ Turso
+if TURSO_DATABASE_URL and TURSO_AUTH_TOKEN:
+    app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite+{TURSO_DATABASE_URL}?authToken={TURSO_AUTH_TOKEN}"
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///store.db' # للاختبار المحلي فقط
+
+db.init_app(app)
+
 
 # ----------------------------------------------------
 #login and logout for admin
@@ -60,11 +76,11 @@ def home():
     return render_template('index.html' , products=products, categories=categories)
 
 # إعداد قاعدة البيانات SQLite
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///store.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///store.db'
+#app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # ربط قاعدة البيانات بالتطبيق
-db.init_app(app)
+#db.init_app(app)
 
 # إنشاء الجدول تلقائياً عند تشغيل التطبيق لأول مرة
 with app.app_context():
@@ -226,4 +242,4 @@ def add_header(response):
     return response
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5000)
