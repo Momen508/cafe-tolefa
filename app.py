@@ -14,12 +14,14 @@ app.secret_key = 'my_super_secret_key_coffee_shop' # يقدر يتبدل بأي 
 TURSO_DATABASE_URL = os.getenv("TURSO_DATABASE_URL")
 TURSO_AUTH_TOKEN = os.getenv("TURSO_AUTH_TOKEN")
 
-# صيغة رابط الاتصال السحابي بـ Turso
 if TURSO_DATABASE_URL and TURSO_AUTH_TOKEN:
-    host = TURSO_DATABASE_URL.replace("libsql://", "").replace("https://", "")
-    app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite+libsql://{host}?authToken={TURSO_AUTH_TOKEN}&secure=true"
+    host = TURSO_DATABASE_URL.replace("libsql://", "").replace("https://", "").strip()
+    app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite+libsql://{host}?secure=true"
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        "connect_args": {"auth_token": TURSO_AUTH_TOKEN.strip()}
+    }
 else:
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///store.db'  # للاختبار المحلي فقط
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///store.db'
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
