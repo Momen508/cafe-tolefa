@@ -72,18 +72,13 @@ def cart_page():
 
 @app.route('/')
 def home():
-    with app.app_context():
-          try:
-             db.create_all()
-          except Exception as e:
-            print("Tables check/creation info:", e)
     new_visit = Visit()
     db.session.add(new_visit)
     db.session.commit()
-        
+
     products = Product.query.all()
     categories = Category.query.all()
-    return render_template('index.html' , products=products, categories=categories)
+    return render_template('index.html', products=products, categories=categories)
 
 # إعداد قاعدة البيانات SQLite
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///store.db'
