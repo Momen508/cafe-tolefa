@@ -99,6 +99,20 @@
                 required>
             <button type="submit" class="btn btn-primary">إضافة</button>
         </form>
+        <div class="mt-3 d-flex flex-wrap gap-2">
+            {% for cat in categories %}
+            <form id="delete-cat-form-{{ cat.id }}" action="{{ url_for('delete_category', id=cat.id) }}" method="POST"
+                class="d-inline">
+                <span class="badge bg-secondary p-2">
+                    {{ cat.name }} ({{ cat.products | length }})
+                    <button type="button" class="btn btn-sm btn-link text-white p-0 ms-2 delete-cat-btn"
+                        data-id="{{ cat.id }}" data-count="{{ cat.products | length }}">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </span>
+            </form>
+            {% endfor %}
+        </div>
     </div>
     <div class="container pb-5">
         <div class="row g-4">
@@ -107,18 +121,16 @@
                 <div class="card p-3">
                     <h5 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-plus-circle me-1"></i> إضافة منتج جديد</h5>
                     <form action="{{ url_for('add_product') }}" method="POST">
+
+                        <!-- اسم المنتج -->
                         <div class="mb-3">
                             <label class="form-label small fw-bold">اسم المنتج</label>
                             <input type="text" name="name" class="form-control" required placeholder="">
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">السعر (ج.م)</label>
-                            <input type="number" min="1" step="0.5" name="price" class="form-control" required
-                                placeholder="">
 
-                        </div>
+                        <!-- القسم -->
                         <div class="mb-3">
-                            <label class="form-label">القسم (Category)</label>
+                            <label class="form-label small fw-bold">القسم (Category)</label>
                             <select name="category_id" class="form-control" required>
                                 <option value="" disabled selected>اختر القسم</option>
                                 {% for cat in categories %}
@@ -126,21 +138,61 @@
                                 {% endfor %}
                             </select>
                         </div>
+
+                        <!-- قسم الأحجام والأسعار المتعددة (بدل السعر الثابت الواحد) -->
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">الأحجام والأسعار</label>
+                            <div id="sizes-container">
+                                <!-- الحجم الأول الافتراضي -->
+                                <div class="size-row-input d-flex gap-2 mb-2">
+                                    <input type="text" name="size_name[]" placeholder="اسم الحجم (مثال: صغير)"
+                                        class="form-control" required>
+                                    <input type="number" min="1" step="0.5" name="size_price[]"
+                                        placeholder="السعر (ج.م)" class="form-control" required>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-secondary mt-1" onclick="addSizeField()">
+                                <i class="fa-solid fa-plus me-1"></i> إضافة حجم آخر
+                            </button>
+                        </div>
+
+                        <!-- رابط الصورة -->
                         <div class="mb-3">
                             <label class="form-label small fw-bold">رابط الصورة (Image URL)</label>
                             <input type="text" name="image_url" class="form-control" placeholder=" ...">
                         </div>
+
+                        <!-- الوصف -->
                         <div class="mb-3">
                             <label class="form-label small fw-bold">الوصف</label>
                             <textarea name="description" class="form-control" rows="2"
                                 placeholder="وصف قصير للمنتج..."></textarea>
                         </div>
-                        <button type="submit" class="btn btn-custom w-100 fw-bold py-2">
+
+                        <button type="submit" class="btn btn-custom w-100 fw-bold py-2"
+                            style="background-color: #b38275; color: white;">
                             <i class="fa-solid fa-check me-1"></i> حفظ المنتج
                         </button>
                     </form>
                 </div>
             </div>
+
+            <!-- دالة الجافاسكريبت لإضافة حقول أحجام جديدة ديناميكياً -->
+            <script>
+                function addSizeField() {
+                    let container = document.getElementById('sizes-container');
+                    let div = document.createElement('div');
+                    div.className = 'size-row-input d-flex gap-2 mb-2 align-items-center';
+                    div.innerHTML = `
+            <input type="text" name="size_name[]" placeholder="اسم الحجم (مثل: وسط)" class="form-control" required>
+            <input type="number" min="1" step="0.5" name="size_price[]" placeholder="السعر (ج.م)" class="form-control" required>
+            <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="height: 38px;">
+                <i class="fa-solid fa-trash"></i>
+            </button>
+        `;
+                    container.appendChild(div);
+                }
+            </script>
 
             <!-- قائمة المنتجات الحالية -->
             <div class="col-md-8">
@@ -169,15 +221,29 @@
                                         <div class="fw-bold">{{ product.name }}</div>
                                         <small class="text-muted">{{ product.description }}</small>
                                     </td>
-                                    <td><span class="badge bg-secondary">{{ product.category_rel.name if product.category_rel else 'غير محدد' }}</span></td>
-                                    <td class="fw-bold text-dark">{{ product.price }} ج.م</td>
+                                    <td><span class="badge bg-secondary">{{ product.category_rel.name if
+                                            product.category_rel else 'غير محدد' }}</span></td>
+                                    <td class="fw-bold text-dark">
+                                        {% if product.sizes %}
+                                        {% for s in product.sizes %}
+                                        <div class="small">{{ s.name }}: {{ s.price }} ج.م</div>
+                                        {% endfor %}
+                                        {% else %}
+                                        {{ product.price or 0 }} ج.م
+                                        {% endif %}
+                                    </td>
                                     <td class="text-center">
                                         <!-- زرار التعديل -->
+                                        {% set sizes_data = [] %}
+                                        {% for s in product.sizes %}
+                                        {% set _ = sizes_data.append({'id': s.id, 'name': s.name, 'price': s.price}) %}
+                                        {% endfor %}
                                         <button class="btn btn-warning btn-sm me-1 edit-btn" data-id="{{ product.id }}"
-                                            data-name="{{ product.name }}" data-price="{{ product.price }}"
+                                            data-name="{{ product.name }}"
                                             data-category="{{ product.category_id if product.category_id else '' }}"
                                             data-description="{{ product.description or '' }}"
-                                            data-image="{{ product.image_url or '' }}">
+                                            data-image="{{ product.image_url or '' }}"
+                                            data-sizes='{{ sizes_data | tojson }}'>
                                             <i class="fa-solid fa-pen-to-square"></i>
                                         </button>
 
@@ -227,20 +293,19 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">السعر (ج.م)</label>
-                            <input type="number" min="1" step="0.5" id="edit-price" class="form-control" required>
-
+                            <label class="form-label fw-bold">الأحجام والأسعار</label>
+                            <div id="edit-sizes-container"></div>
+                            <button type="button" class="btn btn-sm btn-secondary mt-1" onclick="addEditSizeRow()">
+                                <i class="fa-solid fa-plus me-1"></i> إضافة حجم
+                            </button>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label fw-bold">القسم (Category)</label>
                             <select id="edit-category" class="form-select" required>
-                                <option value="بن">بن</option>
-                                <option value="مشروبات متنوعة">مشروبات متنوعة</option>
-                                <option value="مشروبات الإسبريسيو">مشروبات الإسبريسيو</option>
-                                <option value="Iced Coffee">Iced Coffee</option>
-                                <option value="العصائر والسموذي">العصائر والسموذي</option>
-                                <option value="حلويات">حلويات</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                {% endfor %}
                             </select>
                         </div>
 
@@ -266,6 +331,7 @@
 
 
     <script>
+
         function confirmDelete(productId) {
             Swal.fire({
                 title: 'هل أنت تأكد من الحذف؟',
@@ -276,9 +342,7 @@
                 cancelButtonColor: '#6c757d',
                 confirmButtonText: 'نعم، احذفه!',
                 cancelButtonText: 'إلغاء',
-                customClass: {
-                    popup: 'rounded-4'
-                }
+                customClass: { popup: 'rounded-4' }
             }).then((result) => {
                 if (result.isConfirmed) {
                     document.getElementById('delete-form-' + productId).submit();
@@ -286,56 +350,106 @@
             });
         }
 
+        function confirmDeleteCategory(catId, productsCount) {
+            if (productsCount > 0) {
+                Swal.fire({
+                    title: 'لا يمكن حذف التصنيف',
+                    text: `التصنيف فيه ${productsCount} منتج. انقل المنتجات لتصنيف تاني أو احذفها الأول.`,
+                    icon: 'info',
+                    confirmButtonText: 'حسناً'
+                });
+                return;
+            }
+            Swal.fire({
+                title: 'حذف التصنيف؟',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonText: 'إلغاء',
+                confirmButtonText: 'نعم، احذفه'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('delete-cat-form-' + catId).submit();
+                }
+            });
+        }
+
+        // إضافة صف حجم في مودال التعديل
+        function addEditSizeRow(size = {}) {
+            const row = document.createElement('div');
+            row.className = 'edit-size-row d-flex gap-2 mb-2 align-items-center';
+            if (size.id) row.dataset.id = size.id;
+            row.innerHTML = `
+            <input type="text" class="form-control size-name-input" placeholder="اسم الحجم" required>
+            <input type="number" min="1" step="0.5" class="form-control size-price-input" placeholder="السعر" required>
+            <button type="button" class="btn btn-danger btn-sm" style="height:38px;"
+                onclick="this.parentElement.remove()"><i class="fa-solid fa-trash"></i></button>
+        `;
+            row.querySelector('.size-name-input').value = size.name || '';
+            row.querySelector('.size-price-input').value = size.price ?? '';
+            document.getElementById('edit-sizes-container').appendChild(row);
+        }
+
         let editModal;
 
         document.addEventListener('DOMContentLoaded', function () {
             editModal = new bootstrap.Modal(document.getElementById('editProductModal'));
 
-            // ربط زرار التعديل بحدث الـ Click بأمان
             document.querySelectorAll('.edit-btn').forEach(button => {
                 button.addEventListener('click', function () {
-                    const id = this.getAttribute('data-id');
-                    const name = this.getAttribute('data-name');
-                    const price = this.getAttribute('data-price');
-                    const category = this.getAttribute('data-category');
-                    const description = this.getAttribute('data-description');
-                    const imageUrl = this.getAttribute('data-image');
+                    document.getElementById('edit-id').value = this.getAttribute('data-id');
+                    document.getElementById('edit-name').value = this.getAttribute('data-name');
+                    document.getElementById('edit-category').value = this.getAttribute('data-category');
+                    document.getElementById('edit-description').value = this.getAttribute('data-description');
+                    document.getElementById('edit-image-url').value = this.getAttribute('data-image');
 
-                    // تعبئة البيانات في الفورم
-                    document.getElementById('edit-id').value = id;
-                    document.getElementById('edit-name').value = name;
-                    document.getElementById('edit-price').value = price;
-                    document.getElementById('edit-category').value = category;
-                    document.getElementById('edit-description').value = description;
-                    document.getElementById('edit-image-url').value = imageUrl;
+                    // تعبئة صفوف الأحجام
+                    const container = document.getElementById('edit-sizes-container');
+                    container.innerHTML = '';
+                    const sizes = JSON.parse(this.getAttribute('data-sizes') || '[]');
+                    if (sizes.length === 0) {
+                        addEditSizeRow();
+                    } else {
+                        sizes.forEach(s => addEditSizeRow(s));
+                    }
 
-                    // فتح المودال
                     editModal.show();
+                });
+            });
+            document.querySelectorAll('.delete-cat-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    confirmDeleteCategory(this.dataset.id, parseInt(this.dataset.count));
                 });
             });
         });
 
-        // التعامل مع إرسال الفورم لتعديل المنتج
         document.getElementById('editProductForm').addEventListener('submit', function (e) {
             e.preventDefault();
 
             const id = document.getElementById('edit-id').value;
 
-            // 1. تعريف الكائن updatedData بشكل صحيح ومظبوط
+            const sizes = [...document.querySelectorAll('#edit-sizes-container .edit-size-row')].map(row => ({
+                id: row.dataset.id ? parseInt(row.dataset.id) : null,
+                name: row.querySelector('.size-name-input').value,
+                price: row.querySelector('.size-price-input').value
+            }));
+
+            if (sizes.length === 0) {
+                Swal.fire('تنبيه', 'لازم يكون فيه حجم واحد على الأقل', 'warning');
+                return;
+            }
+
             const updatedData = {
                 name: document.getElementById('edit-name').value,
-                price: document.getElementById('edit-price').value,
-                category: document.getElementById('edit-category').value,
+                category_id: parseInt(document.getElementById('edit-category').value),
                 description: document.getElementById('edit-description').value,
-                image_url: document.getElementById('edit-image-url').value
+                image_url: document.getElementById('edit-image-url').value,
+                sizes: sizes
             };
 
-            // 2. إرسال الطلب للـ API
             fetch(`/api/products/${id}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedData)
             })
                 .then(response => response.json())
@@ -346,15 +460,14 @@
                         text: 'تم تحديث بيانات المنتج بنجاح.',
                         icon: 'success',
                         confirmButtonText: 'حسناً'
-                    }).then(() => {
-                        location.reload();
-                    });
+                    }).then(() => location.reload());
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     Swal.fire('خطأ!', 'حدثت مشكلة أثناء التعديل.', 'error');
                 });
         });
+
     </script>
 
     <!-- السكريبتات الخاصة بك هنا -->

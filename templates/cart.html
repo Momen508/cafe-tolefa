@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <link rel="icon" href="{{ url_for('static', filename='logo2.jpeg') }}" type="image/x-icon">
     <meta charset="UTF-8">
@@ -13,6 +14,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             padding-bottom: 60px;
         }
+
         /* Header */
         .cart-header {
             background-color: #b38275;
@@ -21,6 +23,7 @@
             justify-content: space-between;
             align-items: center;
         }
+
         .btn-back {
             background-color: #4e342e;
             color: white;
@@ -33,7 +36,8 @@
             align-items: center;
             gap: 6px;
         }
-                .cart-header-logo {
+
+        .cart-header-logo {
             width: 38px;
             height: 38px;
             border-radius: 50%;
@@ -55,15 +59,17 @@
             border-radius: 16px;
             padding: 14px;
             margin-bottom: 12px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
             border: none;
         }
+
         .product-img {
             width: 65px;
             height: 65px;
             border-radius: 10px;
             object-fit: cover;
         }
+
         .qty-btn {
             background: #3e2723;
             color: white;
@@ -73,10 +79,12 @@
             border-radius: 8px;
             font-weight: bold;
         }
+
         .qty-btn.minus {
             background: #f0f0f0;
             color: #333;
         }
+
         .btn-delete {
             color: #dc3545;
             background: none;
@@ -90,8 +98,9 @@
             border-radius: 16px;
             padding: 16px;
             margin-top: 16px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
         }
+
         .form-control {
             background-color: #f8f9fa;
             border: 1px solid #eee;
@@ -99,8 +108,10 @@
             padding: 10px 14px;
             font-size: 0.9rem;
         }
+
         .btn-whatsapp {
-            background-color: #3e2723; /* لون قهوة داكن يتناسب مع هويتك */
+            background-color: #3e2723;
+            /* لون قهوة داكن يتناسب مع هويتك */
             color: white;
             border-radius: 12px;
             padding: 12px;
@@ -113,6 +124,7 @@
             gap: 8px;
             font-size: 1rem;
         }
+
         .site-footer {
             background-color: #1a233a;
             color: #fff;
@@ -127,24 +139,26 @@
         }
     </style>
 </head>
+
 <body>
 
     <!-- Header -->
     <div class="cart-header">
-       <button onclick="goHome()" class="btn-back" style="cursor: pointer;">
-    <i class="fa-solid fa-arrow-right"></i> العودة للمنيو
+        <button onclick="goHome()" class="btn-back" style="cursor: pointer;">
+            <i class="fa-solid fa-arrow-right"></i> العودة للمنيو
         </button>
         <div class="cart-header-logo">
-    <img src="{{ url_for('static', filename='logo2.jpeg') }}" alt="Logo">
-</div>
+            <img src="{{ url_for('static', filename='logo2.jpeg') }}" alt="Logo">
+        </div>
     </div>
 
     <div class="container py-3" style="max-width: 500px;">
-        
+
         <!-- عنوان السلة والعدد -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="fw-bold mb-0">منتجاتك (<span id="items-count">0</span>)</h5>
-           <a href="#" onclick="goHome(); return false;" class="text-decoration-none fw-bold small text-dark">+ إضافة منتجات</a>
+            <a href="#" onclick="goHome(); return false;" class="text-decoration-none fw-bold small text-dark">+ إضافة
+                منتجات</a>
         </div>
 
         <!-- قائمة المنتجات الديناميكية -->
@@ -168,7 +182,8 @@
                 <span class="fw-bold fs-5">الإجمالي</span>
                 <span id="summary-total-price" class="fw-bold fs-4 text-dark">0 ج.م</span>
             </div>
-            <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">تكلفة التوصيل، إن وجدت، يتم تأكيدها مع المطعم عبر WhatsApp.</small>
+            <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">تكلفة التوصيل، إن وجدت، يتم تأكيدها مع
+                المطعم عبر WhatsApp.</small>
         </div>
 
         <!-- بيانات التوصيل -->
@@ -185,17 +200,20 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label small fw-bold text-secondary">العنوان *</label>
-                    <textarea id="custAddress" class="form-control" rows="2" placeholder="اكتب عنوان التوصيل بالتفصيل" required></textarea>
+                    <textarea id="custAddress" class="form-control" rows="2" placeholder="اكتب عنوان التوصيل بالتفصيل"
+                        required></textarea>
                 </div>
                 <div class="mb-3">
                     <label class="form-label small fw-bold text-secondary">ملاحظات إضافية</label>
-                    <textarea id="custNotes" class="form-control" rows="2" placeholder="أي تفاصيل إضافية للطلب (اختياري)"></textarea>
+                    <textarea id="custNotes" class="form-control" rows="2"
+                        placeholder="أي تفاصيل إضافية للطلب (اختياري)"></textarea>
                 </div>
 
                 <button type="submit" class="btn-whatsapp">
                     <i class="fa-brands fa-whatsapp fs-5"></i> إرسال الطلب عبر WhatsApp
                 </button>
-                <small class="text-center text-muted d-block mt-2" style="font-size: 0.75rem;">سيتم فتح WhatsApp لإرسال تفاصيل طلبك إلى الفرع.</small>
+                <small class="text-center text-muted d-block mt-2" style="font-size: 0.75rem;">سيتم فتح WhatsApp لإرسال
+                    تفاصيل طلبك إلى الفرع.</small>
             </form>
         </div>
 
@@ -207,13 +225,13 @@
     </div>
 
     <script>
-         function goHome() {
-             window.location.href = window.location.origin + '/';
-             }
+        function goHome() {
+            window.location.href = window.location.origin + '/';
+        }
 
         // تحميل السلة من localStorage
         let cart = JSON.parse(localStorage.getItem('coffee_cart')) || [];
-        
+
         function renderCart() {
             const container = document.getElementById('cart-items-container');
             container.innerHTML = '';
@@ -242,7 +260,7 @@
                         <div class="d-flex align-items-center gap-3">
                             <img src="/static/${item.image_url || 'logo2.jpeg'}" class="product-img" alt="${item.name}">
                             <div class="flex-grow-1">
-                                <h6 class="fw-bold mb-1 fs-6">${item.name}</h6>
+                                <h6 class="fw-bold mb-1 fs-6">${item.name} ${item.size_name ? `<span class="text-muted small">(${item.size_name})</span>` : ''}</h6>
                                 <div class="text-muted small">${item.category || 'مشروبات'}</div>
                                 <div class="fw-bold text-dark mt-1" style="font-size:0.85rem;">${item.price} ج.م <span class="text-muted fw-normal">/ الوحدة</span></div>
                             </div>
@@ -264,19 +282,12 @@
 
 
 
-// تشغيل عرض السلة فور تحميل الصفحة عشان ما تختفيش مع الريفرش
-document.addEventListener('DOMContentLoaded', function() {
-    if (typeof renderCart === 'function') {
-        renderCart();
-    }
-});
-
-
-
-
-
-
-
+            // تشغيل عرض السلة فور تحميل الصفحة عشان ما تختفيش مع الريفرش
+            document.addEventListener('DOMContentLoaded', function () {
+                if (typeof renderCart === 'function') {
+                    renderCart();
+                }
+            });
 
         }
 
@@ -323,7 +334,7 @@ document.addEventListener('DOMContentLoaded', function() {
             cart.forEach((item, i) => {
                 const sub = item.price * item.quantity;
                 total += sub;
-                itemsList += `${i+1}. ${item.name} (${item.quantity}×) - ${sub} ج.م\n`;
+                itemsList += `${i + 1}. ${item.name} (${item.quantity}×) - ${sub} ج.م\n`;
             });
 
             // 1. إرسال الطلب للسيرفر (قاعدة البيانات) لتسجيله وزيادة العداد في لوحة التحكم
@@ -361,23 +372,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const whatsappNum = "201115575558"; // رقم الواتساب 
             const url = `https://wa.me/${whatsappNum}?text=${encodeURIComponent(message)}`;
-            
+
             // 3. تفريغ السلة بعد الطلب وفتح الواتساب
             localStorage.removeItem('coffee_cart');
             window.open(url, '_blank');
         }
 
         document.addEventListener('DOMContentLoaded', renderCart);
-        
-        
+
+
 
         function showToast(message) {
-    let toast = document.getElementById('toast-notification');
-    if (!toast) {
-        // إنشاء عنصر التوست تلقائياً لو مش موجود في الصفحة
-        toast = document.createElement('div');
-        toast.id = 'toast-notification';
-        toast.style.cssText = `
+            let toast = document.getElementById('toast-notification');
+            if (!toast) {
+                // إنشاء عنصر التوست تلقائياً لو مش موجود في الصفحة
+                toast = document.createElement('div');
+                toast.id = 'toast-notification';
+                toast.style.cssText = `
             position: fixed;
             bottom: 20px;
             left: 50%;
@@ -392,18 +403,19 @@ document.addEventListener('DOMContentLoaded', function() {
              font-weight: bold;
             transition: opacity 0.3s ease;
         `;
-        document.body.appendChild(toast);
-    }
-    
-    toast.innerText = message;
-    toast.style.display = 'block';
-    toast.style.opacity = '1';
+                document.body.appendChild(toast);
+            }
 
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => { toast.style.display = 'none'; }, 300);
-    }, 2500);
-}
-   </script>
+            toast.innerText = message;
+            toast.style.display = 'block';
+            toast.style.opacity = '1';
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => { toast.style.display = 'none'; }, 300);
+            }, 2500);
+        }
+    </script>
 </body>
+
 </html>

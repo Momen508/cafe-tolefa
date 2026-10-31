@@ -1,0 +1,7 @@
+.env
+instance/
+*.db
+__pycache__/
+venv/
+create_tables.py
+turso_create_size.py
