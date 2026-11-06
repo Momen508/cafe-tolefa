@@ -444,7 +444,7 @@
             <div class="col-12 mb-3">
                 <div class="product-card-wide">
                     <div class="product-img rounded mb-2 d-flex align-items-center justify-content-center text-muted" style="overflow: hidden; height: 160px;">
-                        <img src="/static/${p.image_url || 'logo2.jpeg'}" alt="${p.name}" class="img-fluid w-100 h-100" style="object-fit: cover;">
+                       <img src="${p.image_url ? (p.image_url.startsWith('http') ? p.image_url : '/static/' + p.image_url) : '/static/logo2.jpeg'}" alt="${p.name}" class="img-fluid w-100 h-100" style="object-fit: cover;">
                     </div>
                     <h5 class="fw-bold mb-1 mt-2" style="font-size: 1.1rem; text-align: right;">${p.name}</h5>
                     <p class="text-muted small mb-2" style="font-size: 0.8rem; text-align: right;">${p.description || ''}</p>
