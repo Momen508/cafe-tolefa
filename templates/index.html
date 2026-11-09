@@ -376,47 +376,49 @@
 
 
 
+    <script type="application/json" id="initial-products-data">{{ initial_products | tojson | safe }}</script>
     <!-- جافاسكريبت التفاعل والتحكم -->
+    
     <script>
-        let cart = [];
+        let cart = JSON.parse(localStorage.getItem('coffee_cart')) || [];
         let productsList = [];
 
+        // تسجيل الزيارة عند فتح الصفحة
         function recordVisit() {
             fetch('/api/visit', { method: 'POST' }).catch(err => console.log(err));
-            loadProducts();
         }
 
-        async function loadProducts() {
-            let container = document.getElementById('products-container');
-            
-            // إظهار شكل التحميل فوراً أثناء جلب البيانات
-            container.innerHTML = `
-                <div class="col-12 text-center py-5">
-                    <div class="spinner-border text-secondary" role="status" style="width: 3rem; height: 3rem; color: #b38275 !important;">
-                        <span class="visually-hidden">جاري التحميل...</span>
-                    </div>
-                    <p class="text-muted mt-3 fw-bold" style="font-size: 0.95rem;">بنجهز لك أحلى توليفة بن... ☕</p>
-                </div>
-            `;
-
+        // أول ما الصفحة تحمل بالكامل، بنعرض المنتجات الجاهزة فوراً وتحديث واجهة السلة
+        document.addEventListener('DOMContentLoaded', function () {
             try {
-                let res = await fetch('/api/products');
-                productsList = await res.json();
-                displayProducts(productsList);
-            } catch (err) {
-                console.log(err);
-                container.innerHTML = '<p class="text-center text-danger">عذراً، حدث خطأ في تحميل المنتجات. حاول مرة أخرى.</p>';
+                // استلام المنتجات المحقونة من السيرفر مباشرة عبر الـ JSON Script
+                let dataElement = document.getElementById('initial-products-data');
+                if (dataElement) {
+                    productsList = JSON.parse(dataElement.textContent);
+                    // تخزينها محلياً للمرات القادمة
+                    localStorage.setItem('cached_products', JSON.stringify(productsList));
+                }
+            } catch (e) {
+                console.log("Error parsing initial products:", e);
+                // لو حصل مشكلة، نجرب نقرأ من الكاش القديم
+                productsList = JSON.parse(localStorage.getItem('cached_products')) || [];
             }
-        }
-        
+            
+            // عرض المنتجات فوراً بدون أي انتظار
+            displayProducts(productsList);
+            
+            // تحديث أعداد وإجمالي السلة
+            updateCartUI();
+        });
 
-        // عرض المنتجات (مع إمكانية عرض عشوائي أو فلترة)
         // عرض المنتجات بالأحجام المتعددة
         function displayProducts(list) {
             let container = document.getElementById('products-container');
+            if (!container) return;
+            
             container.innerHTML = '';
 
-            if (list.length === 0) {
+            if (!list || list.length === 0) {
                 container.innerHTML = '<p class="text-center text-muted">لا توجد منتجات متاحة حالياً</p>';
                 return;
             }
@@ -426,79 +428,68 @@
 
                 if (p.sizes && p.sizes.length > 0) {
                     p.sizes.forEach(size => {
-                        // لاحظ هنا بنبعت الـ size.id و size.name بوضوح عشان نتجنب أي ReferenceError
                         sizesHtml += `
-                    <div class="size-row">
-                        <button class="size-add-btn" onclick="addToCart(${p.id}, '${p.name}', ${size.price}, '${p.image_url || "logo2.jpeg"}', ${size.id}, '${size.name}')">
-                            <i class="fa-solid fa-cart-shopping"></i>
-                        </button>
-                        <div class="size-details">
-                            <span class="size-name">${size.name}</span>
-                            <span class="size-price">${size.price} ج.م</span>
-                        </div>
-                    </div>
-                `;
+                            <div class="size-row">
+                                <button class="size-add-btn" onclick="addToCart(${p.id}, '${p.name}', ${size.price}, '${p.image_url || "logo2.jpeg"}', ${size.id}, '${size.name}')">
+                                    <i class="fa-solid fa-cart-shopping"></i>
+                                </button>
+                                <div class="size-details">
+                                    <span class="size-name">${size.name}</span>
+                                    <span class="size-price">${size.price} ج.م</span>
+                                </div>
+                            </div>
+                        `;
                     });
                 } else {
-                    // لو المنتج ملوش مقاسات فرعية
                     sizesHtml += `
-                            <div class="size-row">
-                              <button class="size-add-btn" onclick="addToCart(${p.id}, '${p.name}', ${p.price || 0}, '${p.image_url || "logo2.jpeg"}', 0, 'الحجم الأساسي')">
-                                  <i class="fa-solid fa-cart-shopping"></i>
-                                      </button>
-                                         <div class="size-details">
-                                         <span class="size-name">الحجم الأساسي</span>
-                                         <span class="size-price">${p.price || 0} ج.م</span>
-                                         </div>
-                                </div>
-                                    `;
+                        <div class="size-row">
+                            <button class="size-add-btn" onclick="addToCart(${p.id}, '${p.name}', ${p.price || 0}, '${p.image_url || "logo2.jpeg"}', 0, 'الحجم الأساسي')">
+                                <i class="fa-solid fa-cart-shopping"></i>
+                            </button>
+                            <div class="size-details">
+                                <span class="size-name">الحجم الأساسي</span>
+                                <span class="size-price">${p.price || 0} ج.م</span>
+                            </div>
+                        </div>
+                    `;
                 }
 
                 container.innerHTML += `
-            <div class="col-12 mb-3">
-                <div class="product-card-wide">
-                    <div class="product-img rounded mb-2 d-flex align-items-center justify-content-center text-muted" style="overflow: hidden; height: 160px;">
-                       <img src="${p.image_url ? (p.image_url.startsWith('http') ? p.image_url : '/static/' + p.image_url) : '/static/logo2.jpeg'}" alt="${p.name}" class="img-fluid w-100 h-100" style="object-fit: cover;">
+                    <div class="col-12 mb-3">
+                        <div class="product-card-wide">
+                            <div class="product-img rounded mb-2 d-flex align-items-center justify-content-center text-muted" style="overflow: hidden; height: 160px;">
+                               <img src="${p.image_url ? (p.image_url.startsWith('http') ? p.image_url : '/static/' + p.image_url) : '/static/logo2.jpeg'}" alt="${p.name}" class="img-fluid w-100 h-100" style="object-fit: cover;">
+                            </div>
+                            <h5 class="fw-bold mb-1 mt-2" style="font-size: 1.1rem; text-align: right;">${p.name}</h5>
+                            <p class="text-muted small mb-2" style="font-size: 0.8rem; text-align: right;">${p.description || ''}</p>
+                            
+                            <div class="sizes-list">
+                                ${sizesHtml}
+                            </div>
+                        </div>
                     </div>
-                    <h5 class="fw-bold mb-1 mt-2" style="font-size: 1.1rem; text-align: right;">${p.name}</h5>
-                    <p class="text-muted small mb-2" style="font-size: 0.8rem; text-align: right;">${p.description || ''}</p>
-                    
-                    <!-- قائمة المقاسات والأسعار -->
-                    <div class="sizes-list">
-                        ${sizesHtml}
-                    </div>
-                </div>
-            </div>
-        `;
+                `;
             });
         }
+
         // فلترة المنتجات حسب التصنيف
         function filterByCategory(category_id, btn) {
-            // 1. تغيير شكل الزرار النشط
             document.querySelectorAll('.category-pill').forEach(b => b.classList.remove('active'));
             if (btn) btn.classList.add('active');
 
-            // 2. لو داس على "الكل"
             if (category_id === 'all') {
                 displayProducts(productsList);
                 return;
             }
 
-            // 3. الفلترة مع تحويل النصوص لـ Lowercase وتنظيف المساحات
             let target = category_id.toString().trim().toLowerCase();
 
             let filtered = productsList.filter(p => {
                 if (!p.category_id) return false;
                 let prodCat = p.category_id.toString().trim().toLowerCase();
-
-                // مطابقة مرنة (سواء كاملة أو تحتوي على الكلمة)
                 return prodCat === target || prodCat.includes(target) || target.includes(prodCat);
             });
 
-            console.log("المتغير المختار:", category_id);
-            console.log("النتائج المفلترة:", filtered);
-
-            // عرض المنتجات المفلترة
             displayProducts(filtered);
         }
 
@@ -510,38 +501,25 @@
         }
 
         // إضافة للسلة
-        cart = JSON.parse(localStorage.getItem('coffee_cart')) || [];
-
         function addToCart(id, productName, price, image, sizeId, sizeName) {
-            // البحث عن العنصر بنفس الـ id ونفس الـ sizeId معاً لضمان عدم التداخل
             let existingItem = cart.find(item => item.id === id && item.sizeId === sizeId);
 
             if (existingItem) {
-                // لو نفس الصنف ونفس المقاس موجودين، زود الكمية فقط
                 existingItem.quantity += 1;
             } else {
-                // لو نفس الصنف بس بمقاس مختلف، اعتبره عنصر جديد تماماً
                 cart.push({
                     id: id,
-                    sizeId: sizeId,                       // حفظ معرف المقاس للتمييز
-                    name: `${productName} (${sizeName})`, // دمج اسم المقاس مع الاسم عشان يظهر بوضوح
+                    sizeId: sizeId,
+                    name: `${productName} (${sizeName})`,
                     price: price,
                     image_url: image,
                     quantity: 1
                 });
             }
 
-            // احفظ في الـ localStorage
             localStorage.setItem('coffee_cart', JSON.stringify(cart));
-
-            // تحديث واجهة السلة والعداد
-            if (typeof updateCartUI === 'function') {
-                updateCartUI();
-            }
-
-            if (typeof showToast === 'function') {
-                showToast(`تم إضافة ${productName} (${sizeName}) إلى السلة!`);
-            }
+            updateCartUI();
+            showToast(`تم إضافة ${productName} (${sizeName}) إلى السلة!`);
         }
 
         // تحديث واجهة السلة
@@ -549,22 +527,26 @@
             let totalCount = cart.reduce((sum, i) => sum + i.quantity, 0);
             let totalPrice = cart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
 
-            document.getElementById('cart-count').innerText = totalCount;
-            document.getElementById('floating-cart-text').innerText = `السلة (${totalCount})`;
-            document.getElementById('floating-cart-total').innerText = `${totalPrice} ج.م`;
+            let countEl = document.getElementById('cart-count');
+            let textEl = document.getElementById('floating-cart-text');
+            let totalEl = document.getElementById('floating-cart-total');
+
+            if (countEl) countEl.innerText = totalCount;
+            if (textEl) textEl.innerText = `السلة (${totalCount})`;
+            if (totalEl) totalEl.innerText = `${totalPrice} ج.م`;
         }
 
+        // الانتقال لصفحة السلة
         function openCartModal() {
+            if (cart.length === 0) {
+                alert('سلة المشتريات فارغة حالياً!');
+                return;
+            }
             window.location.href = '/cart';
-            // يمكننا تحويله أو إظهار تفاصيل السلة
-            let itemsText = cart.map(i => `${i.name} (عدد: ${i.quantity})`).join(', ');
-            let total = cart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
-            let storePhone = "201115575558"; // رقم الهاتف المذكور في الفوتر
-            let message = `مرحباً، أريد إتمام الطلب التالي:%0a- المنتجات: ${itemsText}%0a- الإجمالي: ${total} ج.م`;
-            window.open(`https://wa.me/${storePhone}?text=${message}`, '_blank');
         }
 
-        function showToast(message = `تم إضافة ${name} إلى السلة! `) {
+        // عرض التنبيهات (Toast)
+        function showToast(message) {
             const toast = document.getElementById('toast-notification');
             if (!toast) return;
 
@@ -572,19 +554,13 @@
             toast.style.display = 'block';
             toast.style.opacity = '1';
 
-            // إخفاء التنبيه تلقائياً بعد ثانيتين (2000 مللي ثانية)
             setTimeout(() => {
                 toast.style.opacity = '0';
                 setTimeout(() => {
                     toast.style.display = 'none';
-                }, 300); // وقت الأنيميشن
+                }, 300);
             }, 2000);
         }
-
-        // تشغيل التحديث فور فتح المنيو لضمان بقاء ظهور العداد والشريط السفلي
-        document.addEventListener('DOMContentLoaded', function () {
-            updateCartUI();
-        });
     </script>
 </body>
 

@@ -85,13 +85,31 @@ def cart_page():
 
 @app.route('/')
 def home():
-    new_visit = Visit()
-    db.session.add(new_visit)
-    db.session.commit()
+    # تسجيل الزيارة (ممكن نخليها تشتعل في الخلفية أو نسيبها زي ما هي لو مش بتاخد وقت طويل)
+    try:
+        new_visit = Visit()
+        db.session.add(new_visit)
+        db.session.commit()
+    except Exception as e:
+        print("Visit error:", e)
 
-    products = Product.query.all()
     categories = Category.query.all()
-    return render_template('index.html', products=products, categories=categories)
+    products = Product.query.all()
+    
+    # تجهيز المنتجات بمقاساتها وأسعارها مسبقاً عشان تروح للواجهة جاهزة تماماً
+    products_list = []
+    for p in products:
+        sizes_list = [{"id": s.id, "name": s.name, "price": s.price} for s in p.sizes]
+        products_list.append({
+            "id": p.id,
+            "name": p.name,
+            "description": p.description,
+            "image_url": p.image_url,
+            "category_id": p.category_id,
+            "sizes": sizes_list
+        })
+
+    return render_template('index.html', categories=categories, initial_products=products_list)
 
 # إعداد قاعدة البيانات SQLite
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///store.db'
