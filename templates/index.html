@@ -387,14 +387,28 @@
         }
 
         async function loadProducts() {
+            let container = document.getElementById('products-container');
+            
+            // إظهار شكل التحميل فوراً أثناء جلب البيانات
+            container.innerHTML = `
+                <div class="col-12 text-center py-5">
+                    <div class="spinner-border text-secondary" role="status" style="width: 3rem; height: 3rem; color: #b38275 !important;">
+                        <span class="visually-hidden">جاري التحميل...</span>
+                    </div>
+                    <p class="text-muted mt-3 fw-bold" style="font-size: 0.95rem;">بنجهز لك أحلى توليفة بن... ☕</p>
+                </div>
+            `;
+
             try {
                 let res = await fetch('/api/products');
                 productsList = await res.json();
                 displayProducts(productsList);
             } catch (err) {
                 console.log(err);
+                container.innerHTML = '<p class="text-center text-danger">عذراً، حدث خطأ في تحميل المنتجات. حاول مرة أخرى.</p>';
             }
         }
+        
 
         // عرض المنتجات (مع إمكانية عرض عشوائي أو فلترة)
         // عرض المنتجات بالأحجام المتعددة
